@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+pymongo
+python-multipart
+qrcode
+pillow
+python-jose[cryptography]
+passlib[bcrypt]
+pydantic
+pydantic-settings
+reportlab

@@ -1,0 +1,23 @@
+INFO:     Started server process [1448925]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8001 (Press CTRL+C to quit)
+INFO:     Started server process [1448954]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8001 (Press CTRL+C to quit)
+INFO:     Started server process [1449026]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+WARNING:  Invalid HTTP request received.
+WARNING:  Invalid HTTP request received.
+WARNING:  Invalid HTTP request received.
+WARNING:  Invalid HTTP request received.
+INFO:     103.18.10.98:45786 - "GET /docs HTTP/1.1" 200 OK
+INFO:     103.18.10.98:45786 - "GET /openapi.json HTTP/1.1" 200 OK
+WARNING:  Invalid HTTP request received.
+WARNING:  Invalid HTTP request received.
+INFO:     72.255.58.138:16753 - "GET /docs HTTP/1.1" 200 OK
+INFO:     72.255.58.138:16753 - "GET /openapi.json HTTP/1.1" 200 OK
+INFO:     72.255.58.138:16752 - "GET /hr/gatepass/GP-2026-0001 HTTP/1.1" 404 Not Found

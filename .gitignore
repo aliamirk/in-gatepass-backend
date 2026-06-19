@@ -1,0 +1,12 @@
+# Ignore media directory
+media/
+
+# Ignore all PNG files
+*.png
+
+# Ignore all PDF files
+*.pdf
+
+aws/
+
+*pycache
