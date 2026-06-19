@@ -10,3 +10,11 @@ media/
 aws/
 
 *pycache
+
+venv/
+
+*pycache*
+*pycache
+__pycache__/
+
+.env
