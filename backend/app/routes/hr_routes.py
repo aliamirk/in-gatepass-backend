@@ -138,17 +138,13 @@ async def get_gatepass_detail(pass_id: str, db=Depends(get_db)):
 @router.get("/gatepass/{pass_number}/print")
 async def print_gatepass(pass_number: str, db=Depends(get_db)):
     """
-    Print gatepass as PDF with QR code.
+    Print gatepass as PDF with logo, QR code, and scanned entry photos.
     """
-    import os
-    import pytz
-    from reportlab.pdfgen import canvas
     from reportlab.lib.pagesizes import letter
-    from fastapi import HTTPException
-    from fastapi.responses import FileResponse
+    from reportlab.lib.utils import simpleSplit
 
-    PKT = pytz.timezone("Asia/Karachi")
     PAGE_WIDTH, PAGE_HEIGHT = letter
+    BOTTOM_MARGIN = 10
 
     gp = gatepass_service.get_gatepass_by_number(db, pass_number)
 
@@ -163,54 +159,12 @@ async def print_gatepass(pass_number: str, db=Depends(get_db)):
 
         c = canvas.Canvas(file_path, pagesize=letter)
 
-        # ----------------------------------------------------------
-        # Load and Draw Logo
-        # ----------------------------------------------------------
-        original_logo_path = r"D:\gatepass\backend\media\logo.png"
-        logo_path = original_logo_path
-        logo_height = 0
-        temp_logo_file = None
+        def check_new_page(current_y, required_space):
+            if current_y - required_space < BOTTOM_MARGIN:
+                c.showPage()
+                return PAGE_HEIGHT - 50
+            return current_y
 
-        if os.path.exists(original_logo_path):
-            try:
-                # Draw logo
-                if logo_path and os.path.exists(logo_path):
-                    logo_width = 120
-                    logo_height = 60
-                    logo_x = (PAGE_WIDTH - logo_width) / 2
-                    logo_y = PAGE_HEIGHT - 100
-                    c.drawImage(logo_path, logo_x, logo_y, width=logo_width, height=logo_height)
-
-            finally:
-                if temp_logo_file and os.path.exists(temp_logo_file.name):
-                    try:
-                        os.unlink(temp_logo_file.name)
-                    except:
-                        pass
-
-        start_y = PAGE_HEIGHT - 140
-
-        # ----------------------------------------------------------
-        # Text Fields
-        # ----------------------------------------------------------
-        c.setFont("Helvetica-Bold", 16)
-        c.drawString(100, start_y, f"Gate Pass: {gp['number']}")
-
-        c.setFont("Helvetica", 12)
-        current_y = start_y - 25
-
-        c.drawString(100, current_y, f"Name: {gp['person_name']}")
-        current_y -= 20
-
-        c.drawString(100, current_y, f"Description: {gp['description']}")
-        current_y -= 20
-
-        c.drawString(100, current_y, f"Status: {gp['status']}")
-        current_y -= 20
-
-        # ----------------------------------------------------------
-        # Date Formatter
-        # ----------------------------------------------------------
         def format_pkt_time(dt):
             if not dt:
                 return None
@@ -220,7 +174,44 @@ async def print_gatepass(pass_number: str, db=Depends(get_db)):
                 dt = dt.astimezone(PKT)
             return dt.strftime('%Y-%m-%d %H:%M:%S') + ' PKT'
 
+        # ----------------------------------------------------------
+        # Logo
+        # ----------------------------------------------------------
+        logo_path = os.path.normpath(settings.LOGO_PATH)
+        if logo_path and os.path.exists(logo_path):
+            logo_width = 120
+            logo_height = 60
+            logo_x = (PAGE_WIDTH - logo_width) / 2
+            logo_y = PAGE_HEIGHT - 100
+            c.drawImage(logo_path, logo_x, logo_y, width=logo_width, height=logo_height)
+            start_y = PAGE_HEIGHT - 140
+        else:
+            start_y = PAGE_HEIGHT - 80
+
+        # ----------------------------------------------------------
+        # Text Fields
+        # ----------------------------------------------------------
+        c.setFont("Helvetica-Bold", 16)
+        c.drawString(100, start_y, f"Gate Pass: {gp['number']}")
+        current_y = start_y - 25
+
+        c.setFont("Helvetica", 12)
+        current_y = check_new_page(current_y, 20)
+        c.drawString(100, current_y, f"Name: {gp['person_name']}")
         current_y -= 20
+
+        description_lines = simpleSplit(f"Description: {gp['description']}", "Helvetica", 12, PAGE_WIDTH - 200)
+        for line in description_lines:
+            current_y = check_new_page(current_y, 20)
+            c.drawString(100, current_y, line)
+            current_y -= 20
+
+        current_y = check_new_page(current_y, 20)
+        c.drawString(100, current_y, f"Status: {gp['status']}")
+        current_y -= 20
+
+        current_y -= 10
+        current_y = check_new_page(current_y, 20)
         c.drawString(100, current_y, f"Created At: {format_pkt_time(gp.get('created_at'))}")
         current_y -= 20
 
@@ -229,23 +220,75 @@ async def print_gatepass(pass_number: str, db=Depends(get_db)):
         # ----------------------------------------------------------
         if gp.get("qr_code_url"):
             qr_path = os.path.join(settings.MEDIA_ROOT, settings.QR_DIR, f"{gp['number']}.png")
-
             if not os.path.exists(qr_path):
                 qr_path = "." + gp["qr_code_url"] if gp["qr_code_url"].startswith("/") else gp["qr_code_url"]
-
             if os.path.exists(qr_path):
+                current_y = check_new_page(current_y, 170)
                 qr_y = current_y - 150
                 c.drawImage(qr_path, 100, qr_y, width=150, height=150)
+                c.setFont("Helvetica", 11)
                 c.drawString(100, qr_y - 20, "Scan QR code at gate")
                 current_y = qr_y - 40
 
         # ----------------------------------------------------------
-        # End PDF
+        # Scanned Entry Photos
         # ----------------------------------------------------------
-        c.drawString(100, current_y, "Entry photos are available separately via the HR Portal.")
-        current_y -= 20
+        scan_photos = list(
+            db["photos"]
+            .find({"pass_number": pass_number, "type": "entry"})
+            .sort("captured_at", 1)
+        )
 
-        # Signature section
+        if scan_photos:
+            photo_w = 180
+            photo_h = 150
+            photos_per_row = 2
+            col_positions = [100, 350]
+
+            current_y = check_new_page(current_y, 30)
+            current_y -= 20
+            c.setFont("Helvetica-Bold", 12)
+            c.drawString(100, current_y, "Scanned Entry Photos")
+            current_y -= 15
+
+            for idx, photo_doc in enumerate(scan_photos):
+                col = idx % photos_per_row
+                if col == 0:
+                    current_y = check_new_page(current_y, 20 + photo_h + 20)
+                    current_y -= 20
+
+                photo_id = photo_doc.get("photo_id", "")
+                photo_file = os.path.join(settings.MEDIA_ROOT, settings.PHOTO_DIR, photo_id)
+                x = col_positions[col]
+
+                c.setFont("Helvetica-Bold", 10)
+                c.drawString(x, current_y, f"Photo {idx + 1}")
+
+                if photo_file and os.path.exists(photo_file):
+                    try:
+                        c.drawImage(
+                            photo_file, x, current_y - photo_h - 12,
+                            width=photo_w, height=photo_h,
+                            preserveAspectRatio=True, mask="auto"
+                        )
+                        ts = format_pkt_time(photo_doc.get("captured_at"))
+                        if ts:
+                            c.setFont("Helvetica", 8)
+                            c.drawString(x, current_y - photo_h - 24, f"Captured: {ts}")
+                    except Exception as img_err:
+                        c.setFont("Helvetica", 9)
+                        c.drawString(x, current_y - 20, f"Photo error: {str(img_err)[:50]}")
+                else:
+                    c.setFont("Helvetica", 9)
+                    c.drawString(x, current_y - 20, "Photo file not found")
+
+                if col == photos_per_row - 1 or idx == len(scan_photos) - 1:
+                    current_y -= (photo_h + 40)
+
+        # ----------------------------------------------------------
+        # Signature Section
+        # ----------------------------------------------------------
+        current_y = check_new_page(current_y, 80)
         current_y -= 40
         c.setFont("Helvetica", 11)
         c.drawString(100, current_y, "HR Signature: _______________________________")
