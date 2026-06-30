@@ -288,12 +288,14 @@ async def print_gatepass(pass_number: str, db=Depends(get_db)):
         # ----------------------------------------------------------
         # Signature Section
         # ----------------------------------------------------------
-        current_y = check_new_page(current_y, 80)
+        current_y = check_new_page(current_y, 110)
         current_y -= 40
         c.setFont("Helvetica", 11)
         c.drawString(100, current_y, "HR Signature: _______________________________")
         current_y -= 30
         c.drawString(100, current_y, "Incharge Signature: _______________________________")
+        current_y -= 30
+        c.drawString(100, current_y, "Owner / Authorized Signatory: _______________________________")
 
         c.showPage()
         c.save()
