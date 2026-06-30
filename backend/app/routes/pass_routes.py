@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from ..database import get_db
 from ..schemas.gatepass import GatePassOut, GatePassFilter
@@ -35,3 +35,10 @@ async def list_passes(
     filter_obj = GatePassFilter(status=status)
     docs = gatepass_service.list_gatepasses(db, filter_obj)
     return [serialize_gatepass(d) for d in docs]
+
+
+@router.delete("/{pass_id}")
+async def delete_gatepass(pass_id: str, db=Depends(get_db)):
+    """Delete a gatepass by its ID."""
+    deleted = gatepass_service.delete_gatepass(db, pass_id)
+    return {"message": f"Gate pass {deleted['number']} deleted successfully", "id": pass_id}

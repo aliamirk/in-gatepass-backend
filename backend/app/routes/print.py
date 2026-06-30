@@ -223,6 +223,27 @@ async def print_gatepass(pass_number: str, db=Depends(get_db)):
             current_y -= (photo_h + 40)
 
         # ----------------------------------------------------------
+        # Signature Fields
+        # ----------------------------------------------------------
+        sig_required_space = 80
+        current_y = check_new_page(current_y, sig_required_space)
+        current_y -= 30
+
+        sig_line_width = 160
+        left_sig_x = 100
+        right_sig_x = PAGE_WIDTH - 100 - sig_line_width
+
+        # Draw signature lines
+        c.setLineWidth(0.5)
+        c.line(left_sig_x, current_y, left_sig_x + sig_line_width, current_y)
+        c.line(right_sig_x, current_y, right_sig_x + sig_line_width, current_y)
+
+        # Labels below lines
+        c.setFont("Helvetica", 9)
+        c.drawString(left_sig_x, current_y - 14, "Authorized Signature")
+        c.drawString(right_sig_x, current_y - 14, "Owner / Authorized Signatory")
+
+        # ----------------------------------------------------------
         # End PDF
         # ----------------------------------------------------------
         c.showPage()

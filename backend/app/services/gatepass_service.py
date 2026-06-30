@@ -118,6 +118,16 @@ def list_gatepasses(db, filter_obj: Optional[GatePassFilter] = None):
     return [_normalize_id(doc) for doc in docs]
 
 
+def delete_gatepass(db, pass_id: str) -> Dict[str, Any]:
+    """Delete a gatepass by its ID. Returns the deleted document."""
+    doc = get_gatepass_by_id(db, pass_id)
+
+    raw_id = doc["_id"]
+    filter_id = ObjectId(raw_id) if ObjectId.is_valid(raw_id) else raw_id
+    db["gatepasses"].delete_one({"_id": filter_id})
+    return doc
+
+
 def update_gatepass_on_entry(db, pass_number: str, gate_user_id: str) -> Dict[str, Any]:
     """Set status to 'entered' and record entry_time on first call; idempotent thereafter."""
     doc = get_gatepass_by_number(db, pass_number)   # raises 404 if missing
