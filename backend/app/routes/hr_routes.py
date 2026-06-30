@@ -286,16 +286,29 @@ async def print_gatepass(pass_number: str, db=Depends(get_db)):
                     current_y -= (photo_h + 40)
 
         # ----------------------------------------------------------
-        # Signature Section
+        # Signature Section (3 columns, side by side)
         # ----------------------------------------------------------
-        current_y = check_new_page(current_y, 110)
+        current_y = check_new_page(current_y, 80)
         current_y -= 40
-        c.setFont("Helvetica", 11)
-        c.drawString(100, current_y, "HR Signature: _______________________________")
-        current_y -= 30
-        c.drawString(100, current_y, "Incharge Signature: _______________________________")
-        current_y -= 30
-        c.drawString(100, current_y, "Owner / Authorized Signatory: _______________________________")
+
+        sig_line_width = 130
+        usable_width = PAGE_WIDTH - 200   # 100 margin each side
+        col_gap = (usable_width - 3 * sig_line_width) / 2
+        sig_x1 = 100
+        sig_x2 = sig_x1 + sig_line_width + col_gap
+        sig_x3 = sig_x2 + sig_line_width + col_gap
+
+        # Draw lines
+        c.setLineWidth(0.5)
+        c.line(sig_x1, current_y, sig_x1 + sig_line_width, current_y)
+        c.line(sig_x2, current_y, sig_x2 + sig_line_width, current_y)
+        c.line(sig_x3, current_y, sig_x3 + sig_line_width, current_y)
+
+        # Labels below lines
+        c.setFont("Helvetica", 8)
+        c.drawCentredString(sig_x1 + sig_line_width / 2, current_y - 14, "HR Signature")
+        c.drawCentredString(sig_x2 + sig_line_width / 2, current_y - 14, "Incharge Signature")
+        c.drawCentredString(sig_x3 + sig_line_width / 2, current_y - 14, "Owner / Authorized Signatory")
 
         c.showPage()
         c.save()
