@@ -179,12 +179,12 @@ async def print_gatepass(pass_number: str, db=Depends(get_db)):
         # ----------------------------------------------------------
         logo_path = os.path.normpath(settings.LOGO_PATH)
         if logo_path and os.path.exists(logo_path):
-            logo_width = 180
-            logo_height = 90
+            logo_width = 120
+            logo_height = 60
             logo_x = (PAGE_WIDTH - logo_width) / 2
-            logo_y = PAGE_HEIGHT - 110
+            logo_y = PAGE_HEIGHT - 100
             c.drawImage(logo_path, logo_x, logo_y, width=logo_width, height=logo_height)
-            start_y = PAGE_HEIGHT - 150
+            start_y = PAGE_HEIGHT - 140
         else:
             start_y = PAGE_HEIGHT - 80
 
@@ -223,9 +223,9 @@ async def print_gatepass(pass_number: str, db=Depends(get_db)):
             if not os.path.exists(qr_path):
                 qr_path = "." + gp["qr_code_url"] if gp["qr_code_url"].startswith("/") else gp["qr_code_url"]
             if os.path.exists(qr_path):
-                current_y = check_new_page(current_y, 220)
-                qr_y = current_y - 200
-                c.drawImage(qr_path, 100, qr_y, width=200, height=200)
+                current_y = check_new_page(current_y, 170)
+                qr_y = current_y - 150
+                c.drawImage(qr_path, 100, qr_y, width=150, height=150)
                 c.setFont("Helvetica", 11)
                 c.drawString(100, qr_y - 20, "Scan QR code at gate")
                 current_y = qr_y - 40
