@@ -179,12 +179,12 @@ async def print_gatepass(pass_number: str, db=Depends(get_db)):
         # ----------------------------------------------------------
         logo_path = os.path.normpath(settings.LOGO_PATH)
         if logo_path and os.path.exists(logo_path):
-            logo_width = 120
-            logo_height = 60
+            logo_width = 180
+            logo_height = 90
             logo_x = (PAGE_WIDTH - logo_width) / 2
-            logo_y = PAGE_HEIGHT - 100
+            logo_y = PAGE_HEIGHT - 110
             c.drawImage(logo_path, logo_x, logo_y, width=logo_width, height=logo_height)
-            start_y = PAGE_HEIGHT - 140
+            start_y = PAGE_HEIGHT - 150
         else:
             start_y = PAGE_HEIGHT - 80
 
@@ -223,9 +223,9 @@ async def print_gatepass(pass_number: str, db=Depends(get_db)):
             if not os.path.exists(qr_path):
                 qr_path = "." + gp["qr_code_url"] if gp["qr_code_url"].startswith("/") else gp["qr_code_url"]
             if os.path.exists(qr_path):
-                current_y = check_new_page(current_y, 170)
-                qr_y = current_y - 150
-                c.drawImage(qr_path, 100, qr_y, width=150, height=150)
+                current_y = check_new_page(current_y, 220)
+                qr_y = current_y - 200
+                c.drawImage(qr_path, 100, qr_y, width=200, height=200)
                 c.setFont("Helvetica", 11)
                 c.drawString(100, qr_y - 20, "Scan QR code at gate")
                 current_y = qr_y - 40
@@ -240,8 +240,8 @@ async def print_gatepass(pass_number: str, db=Depends(get_db)):
         )
 
         if scan_photos:
-            photo_w = 180
-            photo_h = 150
+            photo_w = 260
+            photo_h = 220
             photos_per_row = 2
             col_positions = [100, 350]
 
@@ -307,7 +307,7 @@ async def print_gatepass(pass_number: str, db=Depends(get_db)):
         # Labels below lines
         c.setFont("Helvetica", 8)
         c.drawCentredString(sig_x1 + sig_line_width / 2, current_y - 14, "HR Signature")
-        c.drawCentredString(sig_x2 + sig_line_width / 2, current_y - 14, "Incharge Signature")
+        c.drawCentredString(sig_x2 + sig_line_width / 2, current_y - 14, "Depart Manager Signature")
         c.drawCentredString(sig_x3 + sig_line_width / 2, current_y - 14, "Owner / Authorized Signatory")
 
         c.showPage()
