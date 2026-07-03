@@ -240,10 +240,10 @@ async def print_gatepass(pass_number: str, db=Depends(get_db)):
         )
 
         if scan_photos:
-            photo_w = 260
-            photo_h = 220
+            photo_w = 220
+            photo_h = 180
             photos_per_row = 2
-            col_positions = [100, 350]
+            col_positions = [80, 320]
 
             current_y = check_new_page(current_y, 30)
             current_y -= 20
